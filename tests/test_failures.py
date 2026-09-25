@@ -7,7 +7,7 @@ from src.rules import STATES, TRANSITION_ROLES
 class FailureTest(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.repo=Repository(str(Path(self.tmp.name)/"test.db")); self.service=Service(self.repo)
-        self.item=self.service.create_item({"title":"failure item","description":"failure scenarios","severity":'high',"quantity":5,"threshold":10,"external_ref":"FAIL-1"},"creator",'applicant')
+        self.item=self.service.create_item({"title":"failure item","description":"failure scenarios","severity":'high',"quantity":5,"threshold":10,"facility":"二号锅炉房","permit_type":"大气排污许可","external_ref":"FAIL-1"},"creator",'applicant')
     def tearDown(self): self.repo.close(); self.tmp.cleanup()
     def test_permission_version_duplicate_and_invariant(self):
         with self.assertRaises(PermissionDenied): self.service.transition(self.item["id"],STATES[1],1,"attacker","viewer")

@@ -5,8 +5,19 @@ import json
 from datetime import datetime, timezone
 
 
+def utc_now_dt() -> datetime:
+    return datetime.now(timezone.utc).replace(microsecond=0)
+
+
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return utc_now_dt().isoformat()
+
+
+def parse_utc(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def calculate_hash(previous_hash: str, payload: dict) -> str:

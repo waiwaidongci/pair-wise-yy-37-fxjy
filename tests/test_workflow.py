@@ -8,7 +8,7 @@ class WorkflowTest(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory(); self.repo=Repository(str(Path(self.tmp.name)/"test.db")); self.service=Service(self.repo)
     def tearDown(self): self.repo.close(); self.tmp.cleanup()
     def test_complete_workflow_and_audit(self):
-        item=self.service.create_item({"title":"workflow item","description":"complete business flow","severity":'high',"quantity":12,"threshold":6,"external_ref":"WF-1"},"creator",'applicant')
+        item=self.service.create_item({"title":"workflow item","description":"complete business flow","severity":'high',"quantity":12,"threshold":6,"facility":"一号焚烧线","permit_type":"大气排污许可","external_ref":"WF-1"},"creator",'applicant')
         self.assertEqual(item["status"],STATES[0])
         self.service.add_record(item["id"],{"kind":"evidence","detail":"evidence registered","status":"closed","external_ref":"EV-1"},"recorder",'applicant')
         current=item

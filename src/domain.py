@@ -34,5 +34,12 @@ def require_number(value,field,minimum=0.0):
     except (TypeError,ValueError): raise ValidationError(f"{field}必须是数字")
     if number<minimum: raise ValidationError(f"{field}不能小于{minimum}")
     return number
+def require_int(value,field,minimum=1,maximum=None):
+    if isinstance(value,bool): raise ValidationError(f"{field}必须是整数")
+    if isinstance(value,float) and value.is_integer(): value=int(value)
+    if not isinstance(value,int): raise ValidationError(f"{field}必须是整数")
+    if value<minimum: raise ValidationError(f"{field}不能小于{minimum}")
+    if maximum is not None and value>maximum: raise ValidationError(f"{field}不能大于{maximum}")
+    return value
 def ensure_role(role,allowed):
     if role not in allowed: raise PermissionDenied("当前角色无权执行该操作")

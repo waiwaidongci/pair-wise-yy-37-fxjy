@@ -98,6 +98,17 @@ def make_handler(service: Service, static_dir: str):
                     actor, role = self._identity()
                     del actor
                     self._json(200, {"events": service.audit(role)})
+                elif path == "/api/renewals":
+                    actor, role = self._identity()
+                    del actor
+                    query = parse_qs(urlparse(self.path).query)
+                    status = query.get("status", [None])[0]
+                    self._json(200, {"renewals": service.list_renewals(role, status)})
+                elif path.startswith("/api/renewals/"):
+                    renewal_id = int(path.split("/")[3])
+                    actor, role = self._identity()
+                    del actor
+                    self._json(200, service.get_renewal(renewal_id, role))
                 else:
                     self._json(404, {"error": "not_found"})
             except Exception as exc:
@@ -119,6 +130,17 @@ def make_handler(service: Service, static_dir: str):
                     expected = body.get("expected_version")
                     self._json(200, service.transition(
                         item_id, target, expected, actor, role))
+                elif path == "/api/renewals":
+                    self._json(201, service.create_renewal(body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/review"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(201, service.review_renewal(renewal_id, body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/resubmit"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(200, service.resubmit_renewal(renewal_id, body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/decide"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(200, service.decide_renewal(renewal_id, body, actor, role))
                 else:
                     self._json(404, {"error": "not_found"})
             except Exception as exc:
