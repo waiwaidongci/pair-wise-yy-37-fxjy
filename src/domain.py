@@ -36,3 +36,15 @@ def require_number(value,field,minimum=0.0):
     return number
 def ensure_role(role,allowed):
     if role not in allowed: raise PermissionDenied("当前角色无权执行该操作")
+def parse_datetime(value,field,required=False):
+    from datetime import datetime,timezone
+    if value is None or (isinstance(value,str) and not value.strip()):
+        if required: raise ValidationError(f"{field}不能为空")
+        return None
+    if not isinstance(value,str): raise ValidationError(f"{field}必须是ISO格式时间字符串")
+    text=value.strip()
+    if text[-1:] in ("Z","z"): text=text[:-1]+"+00:00"
+    try: moment=datetime.fromisoformat(text)
+    except ValueError: raise ValidationError(f"{field}不是有效的时间格式")
+    if moment.tzinfo is None: moment=moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(timezone.utc).replace(microsecond=0).isoformat()

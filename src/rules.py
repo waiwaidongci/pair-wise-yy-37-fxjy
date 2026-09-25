@@ -20,3 +20,17 @@ def validate_transition(current,target):
     if not can_transition(current,target): raise ConflictError(f"不能从{current}转换到{target}")
 def completion_blockers(target,open_records): return ["仍有未关闭事项"] if target in TERMINAL_STATES and open_records>0 else []
 def role_for_transition(target): return set(TRANSITION_ROLES.get(target,[]))
+PERMIT_STATES=['active','invalidated']; RENEWAL_STATES=['submitted','rectification','reviewed','reissued','rejected']
+OPEN_RENEWAL_STATES=('submitted','rectification','reviewed'); REVIEW_CONCLUSIONS=('passed','failed')
+PERMIT_ENTITY='排污许可证'; RENEWAL_ENTITY='许可续期'
+PERMIT_CREATE_ROLES=set(['compliance_manager']); RENEWAL_CREATE_ROLES=set(['applicant']); REVIEW_RECORD_ROLES=set(['inspector']); RESUBMIT_ROLES=set(['applicant']); DECIDE_ROLES=set(['compliance_manager'])
+def generate_permit_no(permit_id): return f"{ID_PREFIX}-{permit_id:06d}"
+def normalize_conclusion(value):
+    if value not in REVIEW_CONCLUSIONS: raise ValidationError("conclusion必须是passed或failed")
+    return value
+def status_after_review(conclusion): return 'reviewed' if conclusion=='passed' else 'rectification'
+def permit_expired(valid_until,now=None):
+    from datetime import datetime,timezone
+    moment=datetime.fromisoformat(valid_until)
+    current=datetime.fromisoformat(now) if now else datetime.now(timezone.utc)
+    return current>=moment

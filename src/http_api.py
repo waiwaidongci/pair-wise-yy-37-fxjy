@@ -98,6 +98,30 @@ def make_handler(service: Service, static_dir: str):
                     actor, role = self._identity()
                     del actor
                     self._json(200, {"events": service.audit(role)})
+                elif path == "/api/permits":
+                    actor, role = self._identity()
+                    del actor
+                    query = parse_qs(urlparse(self.path).query)
+                    self._json(200, {"permits": service.list_permits(
+                        role,
+                        query.get("status", [None])[0],
+                        query.get("facility", [None])[0],
+                        query.get("permit_type", [None])[0])})
+                elif path.startswith("/api/permits/") and path.endswith("/renewals"):
+                    permit_id = int(path.split("/")[3])
+                    actor, role = self._identity()
+                    del actor
+                    self._json(200, {"renewals": service.list_renewals(permit_id, role)})
+                elif path.startswith("/api/permits/"):
+                    permit_id = int(path.rsplit("/", 1)[-1])
+                    actor, role = self._identity()
+                    del actor
+                    self._json(200, service.get_permit(permit_id, role))
+                elif path.startswith("/api/renewals/"):
+                    renewal_id = int(path.rsplit("/", 1)[-1])
+                    actor, role = self._identity()
+                    del actor
+                    self._json(200, service.get_renewal(renewal_id, role))
                 else:
                     self._json(404, {"error": "not_found"})
             except Exception as exc:
@@ -119,6 +143,28 @@ def make_handler(service: Service, static_dir: str):
                     expected = body.get("expected_version")
                     self._json(200, service.transition(
                         item_id, target, expected, actor, role))
+                elif path == "/api/permits":
+                    self._json(201, service.create_permit(body, actor, role))
+                elif path.startswith("/api/permits/") and path.endswith("/renewals"):
+                    permit_id = int(path.split("/")[3])
+                    self._json(201, service.initiate_renewal(
+                        permit_id, body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/reviews"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(201, service.record_review(
+                        renewal_id, body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/resubmit"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(200, service.resubmit_renewal(
+                        renewal_id, body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/reissue"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(201, service.reissue(
+                        renewal_id, body, actor, role))
+                elif path.startswith("/api/renewals/") and path.endswith("/reject"):
+                    renewal_id = int(path.split("/")[3])
+                    self._json(200, service.reject_renewal(
+                        renewal_id, body, actor, role))
                 else:
                     self._json(404, {"error": "not_found"})
             except Exception as exc:
